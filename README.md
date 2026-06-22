@@ -19,15 +19,15 @@ Full-stack MERN project for dynamically generating Parental Legacy Analysis valu
 
 ### Workflow
 
-![Dashboard workflow](docs/screenshots/dashboard-workflow.png)
+![Dashboard workflow](https://github.com/user-attachments/assets/1fb2c513-175d-424c-bb29-fa1e20341776)
 
 ### Charts
 
-![Generated totals and charts](docs/screenshots/generated-charts.png)
+![Generated totals and charts](https://github.com/user-attachments/assets/0aff9a6a-f772-4691-ad68-3e2303a20488)
 
 ### Generated Factors
 
-![Generated factors table](docs/screenshots/generated-factors.png)
+![Generated factors table](https://github.com/user-attachments/assets/70e5423e-ecbf-4e41-8b6a-15ec1fe08bab)
 
 ## Setup
 
