@@ -59,19 +59,48 @@ Frontend runs on `http://localhost:5173`.
 
 Backend runs on `http://localhost:3000`.
 
+## Quick Start
+
+1. **Install dependencies:**
+
+   ```bash
+   npm install
+   cd backend && npm install && cd ../frontend && npm install
+   ```
+
+2. **Start the backend:**
+
+   ```bash
+   cd backend
+   npm start
+   ```
+
+3. **Start the frontend (new terminal):**
+
+   ```bash
+   cd frontend
+   npm run dev
+   ```
+
+4. **Upload baseline Excel file** via the dashboard UI
+
+5. **Select a birth date** and generate values
+
+6. **Download the PDF report** with visualizations
+
 ## API Documentation
 
-### `POST /upload`
+All API endpoints run on `http://localhost:3000`.
 
-Uploads the baseline Excel file.
+### 1. `POST /upload`
 
-Form-data:
+Uploads and parses the baseline Excel file.
 
-| Key | Type | Description |
-| --- | --- | --- |
-| `file` | File | Excel file, such as `Test.xlsx` |
+**Request:**
 
-Example response:
+- Form-data with `file` (Excel file)
+
+**Response:**
 
 ```json
 {
@@ -81,21 +110,218 @@ Example response:
 }
 ```
 
-### `GET /analyze`
+**Example:**
 
-Analyzes the uploaded baseline file.
+```bash
+curl -F "file=@Test.xlsx" http://localhost:3000/upload
+```
 
-Returns:
+---
 
-- Whether uploaded totals equal exactly `100.000`.
-- Mother total, Father total, and overall total.
-- Highest and lowest contributing factor for Mother and Father.
-- Structured Mother vs Father comparison across all factors.
+### 2. `GET /analyze`
 
-Example:
+Analyzes the uploaded baseline file to validate totals and identify key statistics.
+
+**Response:**
+
+```json
+{
+  "valid": true,
+  "motherTotal": 50.0,
+  "fatherTotal": 50.0,
+  "total": 100.0,
+  "motherHighest": "Leadership",
+  "motherLowest": "Creativity",
+  "fatherHighest": "Intelligence",
+  "fatherLowest": "Integrity",
+  "factors": [
+    {
+      "name": "Leadership",
+      "mother": 8.5,
+      "father": 7.2
+    }
+  ]
+}
+```
+
+**Example:**
 
 ```bash
 curl http://localhost:3000/analyze
+```
+
+---
+
+### 3. `POST /generate`
+
+Generates new Mother/Father values based on birth date, applying the odd/even date rule.
+
+**Request:**
+
+```json
+{
+  "birthDate": "1990-03-15"
+}
+```
+
+**Response:**
+
+```json
+{
+  "birthDate": "1990-03-15",
+  "motherTotal": 50.123,
+  "fatherTotal": 49.877,
+  "total": 100.0,
+  "factors": [
+    {
+      "factor": "Leadership",
+      "mother": 8.567,
+      "father": 7.456
+    }
+  ]
+}
+```
+
+**Rules:**
+
+- Odd day (e.g., 15th): Mother values are higher
+- Even day (e.g., 14th): Father values are higher
+- Total is **always exactly 100.000**
+
+**Example:**
+
+```bash
+curl -X POST http://localhost:3000/generate \
+  -H "Content-Type: application/json" \
+  -d '{"birthDate":"1990-03-15"}'
+```
+
+---
+
+### 4. `GET /visualize`
+
+Returns Chart.js chart data for the generated values.
+
+**Query Parameters:**
+
+- `birthDate` (optional): Generate and visualize for a specific date. If not provided, uses last generated data.
+
+**Response:**
+
+```json
+{
+  "birthDate": "1990-03-15",
+  "barChart": {
+    "labels": ["Leadership", "Intelligence", ...],
+    "datasets": [
+      {
+        "label": "Mother",
+        "data": [8.567, 7.2, ...],
+        "backgroundColor": "rgba(236, 72, 153, 0.8)"
+      },
+      {
+        "label": "Father",
+        "data": [7.456, 8.1, ...],
+        "backgroundColor": "rgba(59, 130, 246, 0.8)"
+      }
+    ]
+  },
+  "pieChart": {
+    "labels": ["Mother", "Father"],
+    "datasets": [
+      {
+        "data": [50.123, 49.877],
+        "backgroundColor": ["rgba(236, 72, 153, 0.8)", "rgba(59, 130, 246, 0.8)"]
+      }
+    ]
+  }
+}
+```
+
+**Example:**
+
+```bash
+curl "http://localhost:3000/visualize?birthDate=1990-03-15"
+```
+
+---
+
+### 5. `GET /report`
+
+Generates and downloads a PDF report with tables and charts.
+
+**Query Parameters:**
+
+- `birthDate` (optional): Generate report for a specific date. If not provided, uses last generated data.
+
+**Response:**
+
+- Binary PDF file for download
+
+**Example:**
+
+```bash
+curl "http://localhost:3000/report" -o report.pdf
+```
+
+---
+
+## Postman Collection
+
+Import this collection into Postman to test the API:
+
+```json
+{
+  "info": {
+    "name": "Parental Legacy Analysis API",
+    "version": "1.0"
+  },
+  "item": [
+    {
+      "name": "Upload Excel",
+      "request": {
+        "method": "POST",
+        "url": "http://localhost:3000/upload",
+        "body": {
+          "mode": "formdata",
+          "formdata": [{ "key": "file", "type": "file" }]
+        }
+      }
+    },
+    {
+      "name": "Analyze",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:3000/analyze"
+      }
+    },
+    {
+      "name": "Generate",
+      "request": {
+        "method": "POST",
+        "url": "http://localhost:3000/generate",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"birthDate\":\"1990-03-15\"}"
+        }
+      }
+    },
+    {
+      "name": "Visualize",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:3000/visualize?birthDate=1990-03-15"
+      }
+    },
+    {
+      "name": "Report",
+      "request": {
+        "method": "GET",
+        "url": "http://localhost:3000/report"
+      }
+    }
+  ]
+}
 ```
 
 ### `POST /generate`
